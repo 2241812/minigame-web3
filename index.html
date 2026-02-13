@@ -2,153 +2,224 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Valentine Catcher</title>
+<title>Valentine Adventure ❤️</title>
 <style>
-body { margin: 0; overflow: hidden; font-family: sans-serif; background: #ffe6ea; touch-action: none; }
-#game-area { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-#player { position: absolute; bottom: 20px; width: 80px; height: 80px; background: url('basket.png') no-repeat center center/contain; transform: translateX(-50%); pointer-events: none; z-index: 10; }
-.item { position: absolute; width: 50px; height: 50px; background-repeat: no-repeat; background-position: center; background-size: contain; will-change: top; }
-#ui { position: absolute; top: 10px; left: 10px; font-size: 24px; color: #d6336c; font-weight: bold; z-index: 100; pointer-events: none; }
-#start-screen, #game-over { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 230, 234, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
-h1 { color: #d6336c; font-size: 40px; text-align: center; margin-bottom: 20px; }
-button { padding: 15px 40px; font-size: 24px; background: #ff3366; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 0 #c2185b; }
-button:active { transform: translateY(4px); box-shadow: none; }
-#game-over { display: none; }
+    body {
+        margin: 0;
+        overflow: hidden;
+        font-family: 'Arial', sans-serif;
+        background: #111;
+    }
+
+    canvas {
+        display: block;
+        background: url('images/bg.jpg') no-repeat center center;
+        background-size: cover;
+    }
+
+    #puzzleModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-align: center;
+    }
+
+    .puzzleBox {
+        background: #ff4f81;
+        padding: 30px;
+        border-radius: 15px;
+        width: 300px;
+    }
+
+    input {
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
+        width: 80%;
+        margin-top: 10px;
+    }
+
+    button {
+        margin-top: 15px;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    #messageScreen {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(to bottom right, #ff4f81, #ff9a9e);
+        display: none;
+        color: white;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        font-size: 2rem;
+    }
 </style>
 </head>
 <body>
 
-<div id="game-area">
-    <div id="ui">Score: <span id="score">0</span></div>
-    <div id="player"></div>
-    <div id="start-screen">
-        <h1>Valentine Catcher</h1>
-        <button onclick="startGame()">Play</button>
-    </div>
-    <div id="game-over">
-        <h1>Game Over!</h1>
-        <h2 id="final-score">Score: 0</h2>
-        <button onclick="location.reload()">Try Again</button>
+<canvas id="gameCanvas"></canvas>
+
+<div id="puzzleModal">
+    <div class="puzzleBox">
+        <h2>💌 Love Puzzle</h2>
+        <p>What is our anniversary date?</p>
+        <input id="answerInput" placeholder="MM/DD/YYYY">
+        <br>
+        <button onclick="checkAnswer()">Unlock ❤️</button>
+        <p id="errorMsg" style="color:yellow;"></p>
     </div>
 </div>
 
+<div id="messageScreen">
+    <h1>You Reached the End 💖</h1>
+    <p>I Love You So Much ❤️</p>
+</div>
+
 <script>
-const player = document.getElementById('player');
-const gameArea = document.getElementById('game-area');
-const scoreEl = document.getElementById('score');
-const startScreen = document.getElementById('start-screen');
-const gameOverScreen = document.getElementById('game-over');
-const finalScoreEl = document.getElementById('final-score');
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-let score = 0;
-let isActive = false;
-let gameLoop;
-let spawnLoop;
-let items = [];
-let speedMultiplier = 1;
-let playerX = window.innerWidth / 2;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-const assets = {
-    good: ['rose.png', 'letter.png', 'chocolate.png'],
-    bad: ['broken.png'] 
+let gravity = 0.8;
+let keysCollected = 0;
+
+const playerImg = new Image();
+playerImg.src = "images/player.png"; // replace
+
+const envelopeImg = new Image();
+envelopeImg.src = "images/envelope.png"; // replace
+
+const gateImg = new Image();
+gateImg.src = "images/gate.png"; // replace
+
+let player = {
+    x: 100,
+    y: 300,
+    width: 50,
+    height: 50,
+    dx: 0,
+    dy: 0,
+    jumping: false
 };
 
-function updatePlayerPos() {
-    player.style.left = playerX + 'px';
-}
-updatePlayerPos();
+let keys = {};
+let envelopes = [
+    {x: 600, y: 300, solved: false},
+    {x: 1200, y: 300, solved: false}
+];
 
-document.addEventListener('mousemove', (e) => {
-    if (!isActive) return;
-    playerX = e.clientX;
-    updatePlayerPos();
-});
+let gate = {
+    x: 1600,
+    y: 280,
+    width: 80,
+    height: 120
+};
 
-document.addEventListener('touchmove', (e) => {
-    if (!isActive) return;
-    playerX = e.touches[0].clientX;
-    updatePlayerPos();
-}, { passive: false });
+let finishLine = 2000;
 
-function createItem() {
-    const el = document.createElement('div');
-    el.classList.add('item');
-    const isBad = Math.random() > 0.75;
-    const type = isBad ? 'bad' : 'good';
-    const imgList = assets[type];
-    const img = imgList[Math.floor(Math.random() * imgList.length)];
-    
-    el.style.backgroundImage = `url('${img}')`;
-    el.style.left = Math.random() * (window.innerWidth - 50) + 'px';
-    el.style.top = '-60px';
-    el.dataset.type = type;
-    el.dataset.speed = (Math.random() * 3 + 3) * speedMultiplier;
-    
-    gameArea.appendChild(el);
-    items.push({ el: el, y: -60, speed: parseFloat(el.dataset.speed), type: type });
-}
-
-function startGame() {
-    startScreen.style.display = 'none';
-    isActive = true;
-    score = 0;
-    speedMultiplier = 1;
-    scoreEl.innerText = '0';
-    
-    player.style.backgroundImage = "url('basket.png')";
-    if (!player.style.backgroundImage.includes('url')) {
-        player.style.backgroundColor = '#ff3366';
-        player.style.borderRadius = '10px';
-    }
-
-    spawnLoop = setInterval(createItem, 800);
-    gameLoop = requestAnimationFrame(update);
-}
-
-function endGame() {
-    isActive = false;
-    clearInterval(spawnLoop);
-    cancelAnimationFrame(gameLoop);
-    gameOverScreen.style.display = 'flex';
-    finalScoreEl.innerText = 'Score: ' + score;
-}
+document.addEventListener("keydown", e => keys[e.code] = true);
+document.addEventListener("keyup", e => keys[e.code] = false);
 
 function update() {
-    if (!isActive) return;
 
-    for (let i = items.length - 1; i >= 0; i--) {
-        const item = items[i];
-        item.y += item.speed;
-        item.el.style.top = item.y + 'px';
+    if (keys["ArrowRight"]) player.dx = 5;
+    else if (keys["ArrowLeft"]) player.dx = -5;
+    else player.dx = 0;
 
-        const pRect = player.getBoundingClientRect();
-        const iRect = item.el.getBoundingClientRect();
+    if (keys["Space"] && !player.jumping) {
+        player.dy = -15;
+        player.jumping = true;
+    }
 
-        if (
-            iRect.left < pRect.right &&
-            iRect.right > pRect.left &&
-            iRect.bottom > pRect.top &&
-            iRect.top < pRect.bottom
-        ) {
-            if (item.type === 'bad') {
-                endGame();
-                return;
-            } else {
-                score += 10;
-                scoreEl.innerText = score;
-                speedMultiplier += 0.02;
-                item.el.remove();
-                items.splice(i, 1);
-            }
-        } else if (item.y > window.innerHeight) {
-            item.el.remove();
-            items.splice(i, 1);
+    player.dy += gravity;
+    player.x += player.dx;
+    player.y += player.dy;
+
+    if (player.y > 300) {
+        player.y = 300;
+        player.jumping = false;
+    }
+
+    envelopes.forEach(env => {
+        if (!env.solved &&
+            player.x < env.x + 50 &&
+            player.x + player.width > env.x &&
+            player.y < env.y + 50 &&
+            player.y + player.height > env.y) {
+
+            openPuzzle(env);
+        }
+    });
+
+    if (keysCollected < envelopes.length) {
+        if (player.x + player.width > gate.x) {
+            player.x = gate.x - player.width;
         }
     }
 
-    gameLoop = requestAnimationFrame(update);
+    if (player.x > finishLine) {
+        document.getElementById("messageScreen").style.display = "flex";
+    }
+}
+
+function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+
+    envelopes.forEach(env => {
+        if (!env.solved)
+            ctx.drawImage(envelopeImg, env.x, env.y, 50, 50);
+    });
+
+    ctx.drawImage(gateImg, gate.x, gate.y, gate.width, gate.height);
+
+    ctx.fillStyle = "white";
+    ctx.fillText("Keys: " + keysCollected, 20, 30);
+}
+
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+let currentEnvelope = null;
+
+function openPuzzle(env) {
+    currentEnvelope = env;
+    document.getElementById("puzzleModal").style.display = "flex";
+}
+
+function checkAnswer() {
+    let input = document.getElementById("answerInput").value;
+    
+    if (input === "02/14/2023") { // change to your real date
+        currentEnvelope.solved = true;
+        keysCollected++;
+        document.getElementById("puzzleModal").style.display = "none";
+        document.getElementById("errorMsg").innerText = "";
+        document.getElementById("answerInput").value = "";
+    } else {
+        document.getElementById("errorMsg").innerText = "Wrong answer 💔 Try again!";
+    }
 }
 </script>
+
 </body>
 </html>
