@@ -2,381 +2,153 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Love Quest Platformer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Valentine Catcher</title>
 <style>
-    body {
-        margin: 0;
-        overflow: hidden;
-        background-color: #ffe6ea;
-        font-family: 'Comic Sans MS', cursive, sans-serif;
-    }
-    #game-container {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        background: linear-gradient(to bottom, #ffe6ea, #ffc0cb);
-    }
-    #world {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        transition: transform 0.1s linear;
-    }
-    .entity {
-        position: absolute;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-    }
-    #player {
-        width: 50px;
-        height: 50px;
-        background-color: #ff3366;
-        border-radius: 10px;
-        z-index: 10;
-        background-image: url('hero.png');
-        transition: transform 0.1s;
-    }
-    .platform {
-        background-color: #8b4513;
-        border-top: 5px solid #5c2e0b;
-        border-radius: 4px;
-        background-image: url('ground.png');
-    }
-    .heart {
-        width: 30px;
-        height: 30px;
-        background-color: red;
-        clip-path: polygon(50% 0%, 100% 35%, 82% 100%, 50% 80%, 18% 100%, 0% 35%);
-        animation: pulse 1s infinite;
-        background-image: url('heart.png');
-        background-color: transparent; 
-        clip-path: none; 
-    }
-    .enemy {
-        width: 40px;
-        height: 40px;
-        background-color: #666;
-        border-radius: 50%;
-        animation: wobble 2s infinite;
-        background-image: url('enemy.png');
-    }
-    .goal {
-        width: 80px;
-        height: 80px;
-        background-color: gold;
-        border-radius: 50%;
-        box-shadow: 0 0 20px gold;
-        background-image: url('love.png');
-    }
-    #ui {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        font-size: 24px;
-        color: #d6336c;
-        font-weight: bold;
-        z-index: 100;
-        text-shadow: 2px 2px white;
-    }
-    #victory-screen {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 192, 203, 0.95);
-        z-index: 200;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-    }
-    #victory-screen h1 {
-        font-size: 4rem;
-        color: #d6336c;
-        animation: bounce 2s infinite;
-    }
-    #reset-btn {
-        padding: 15px 30px;
-        font-size: 1.5rem;
-        background: #ff3366;
-        color: white;
-        border: none;
-        border-radius: 50px;
-        cursor: pointer;
-        margin-top: 20px;
-        box-shadow: 0 5px 0 #c2185b;
-        transition: transform 0.1s;
-    }
-    #reset-btn:active {
-        transform: translateY(5px);
-        box-shadow: none;
-    }
-    .cloud {
-        position: absolute;
-        background: white;
-        border-radius: 50px;
-        opacity: 0.8;
-        z-index: 0;
-    }
-    
-    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-    @keyframes wobble { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
-    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+body { margin: 0; overflow: hidden; font-family: sans-serif; background: #ffe6ea; touch-action: none; }
+#game-area { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+#player { position: absolute; bottom: 20px; width: 80px; height: 80px; background: url('basket.png') no-repeat center center/contain; transform: translateX(-50%); pointer-events: none; z-index: 10; }
+.item { position: absolute; width: 50px; height: 50px; background-repeat: no-repeat; background-position: center; background-size: contain; will-change: top; }
+#ui { position: absolute; top: 10px; left: 10px; font-size: 24px; color: #d6336c; font-weight: bold; z-index: 100; pointer-events: none; }
+#start-screen, #game-over { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 230, 234, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
+h1 { color: #d6336c; font-size: 40px; text-align: center; margin-bottom: 20px; }
+button { padding: 15px 40px; font-size: 24px; background: #ff3366; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 0 #c2185b; }
+button:active { transform: translateY(4px); box-shadow: none; }
+#game-over { display: none; }
 </style>
 </head>
 <body>
 
-<div id="ui">Hearts: <span id="score">0</span></div>
-<div id="game-container">
-    <div id="world">
-        <div id="player" class="entity"></div>
+<div id="game-area">
+    <div id="ui">Score: <span id="score">0</span></div>
+    <div id="player"></div>
+    <div id="start-screen">
+        <h1>Valentine Catcher</h1>
+        <button onclick="startGame()">Play</button>
+    </div>
+    <div id="game-over">
+        <h1>Game Over!</h1>
+        <h2 id="final-score">Score: 0</h2>
+        <button onclick="location.reload()">Try Again</button>
     </div>
 </div>
 
-<div id="victory-screen">
-    <h1>Level Complete!<br>Will you be my Valentine?</h1>
-    <button id="reset-btn" onclick="location.reload()">Play Again</button>
-</div>
-
 <script>
-    const player = {
-        el: document.getElementById('player'),
-        x: 100,
-        y: 400,
-        width: 50,
-        height: 50,
-        vx: 0,
-        vy: 0,
-        speed: 5,
-        jumpPower: -13,
-        gravity: 0.6,
-        grounded: false
-    };
+const player = document.getElementById('player');
+const gameArea = document.getElementById('game-area');
+const scoreEl = document.getElementById('score');
+const startScreen = document.getElementById('start-screen');
+const gameOverScreen = document.getElementById('game-over');
+const finalScoreEl = document.getElementById('final-score');
 
-    const keys = { right: false, left: false, up: false };
-    let score = 0;
-    let gameActive = true;
-    const world = document.getElementById('world');
-    const gravity = 0.6;
-    const friction = 0.8;
+let score = 0;
+let isActive = false;
+let gameLoop;
+let spawnLoop;
+let items = [];
+let speedMultiplier = 1;
+let playerX = window.innerWidth / 2;
 
-    const levelData = {
-        platforms: [
-            { x: 0, y: 500, w: 1000, h: 50 },
-            { x: 300, y: 350, w: 150, h: 20 },
-            { x: 550, y: 250, w: 150, h: 20 },
-            { x: 800, y: 400, w: 100, h: 20 },
-            { x: 1100, y: 500, w: 800, h: 50 },
-            { x: 1200, y: 350, w: 100, h: 20 },
-            { x: 1400, y: 200, w: 100, h: 20 },
-            { x: 1650, y: 300, w: 150, h: 20 },
-            { x: 1900, y: 150, w: 300, h: 20 }, 
-            { x: 2000, y: 500, w: 500, h: 50 }
-        ],
-        enemies: [
-            { x: 600, y: 210, w: 40, h: 40, dir: 1, speed: 2, range: 100, startX: 600 },
-            { x: 1200, y: 460, w: 40, h: 40, dir: 1, speed: 3, range: 150, startX: 1200 }
-        ],
-        hearts: [
-            { x: 350, y: 300, w: 30, h: 30, collected: false },
-            { x: 570, y: 200, w: 30, h: 30, collected: false },
-            { x: 820, y: 350, w: 30, h: 30, collected: false },
-            { x: 1230, y: 300, w: 30, h: 30, collected: false },
-            { x: 1430, y: 150, w: 30, h: 30, collected: false },
-            { x: 1700, y: 250, w: 30, h: 30, collected: false }
-        ],
-        goal: { x: 2050, y: 70, w: 80, h: 80 },
-        clouds: [
-            { x: 100, y: 100, w: 100, h: 50 },
-            { x: 400, y: 50, w: 150, h: 70 },
-            { x: 800, y: 120, w: 120, h: 60 },
-            { x: 1300, y: 80, w: 180, h: 80 }
-        ]
-    };
+const assets = {
+    good: ['rose.png', 'letter.png', 'chocolate.png'],
+    bad: ['broken.png'] 
+};
 
-    function init() {
-        levelData.platforms.forEach(p => {
-            const el = document.createElement('div');
-            el.className = 'entity platform';
-            el.style.left = p.x + 'px';
-            el.style.top = p.y + 'px';
-            el.style.width = p.w + 'px';
-            el.style.height = p.h + 'px';
-            world.appendChild(el);
-        });
+function updatePlayerPos() {
+    player.style.left = playerX + 'px';
+}
+updatePlayerPos();
 
-        levelData.clouds.forEach(c => {
-            const el = document.createElement('div');
-            el.className = 'cloud';
-            el.style.left = c.x + 'px';
-            el.style.top = c.y + 'px';
-            el.style.width = c.w + 'px';
-            el.style.height = c.h + 'px';
-            world.appendChild(el);
-        });
+document.addEventListener('mousemove', (e) => {
+    if (!isActive) return;
+    playerX = e.clientX;
+    updatePlayerPos();
+});
 
-        levelData.hearts.forEach((h, index) => {
-            const el = document.createElement('div');
-            el.className = 'entity heart';
-            el.id = 'heart-' + index;
-            el.style.left = h.x + 'px';
-            el.style.top = h.y + 'px';
-            world.appendChild(el);
-        });
+document.addEventListener('touchmove', (e) => {
+    if (!isActive) return;
+    playerX = e.touches[0].clientX;
+    updatePlayerPos();
+}, { passive: false });
 
-        levelData.enemies.forEach((e, index) => {
-            const el = document.createElement('div');
-            el.className = 'entity enemy';
-            el.id = 'enemy-' + index;
-            el.style.left = e.x + 'px';
-            el.style.top = e.y + 'px';
-            world.appendChild(el);
-        });
+function createItem() {
+    const el = document.createElement('div');
+    el.classList.add('item');
+    const isBad = Math.random() > 0.75;
+    const type = isBad ? 'bad' : 'good';
+    const imgList = assets[type];
+    const img = imgList[Math.floor(Math.random() * imgList.length)];
+    
+    el.style.backgroundImage = `url('${img}')`;
+    el.style.left = Math.random() * (window.innerWidth - 50) + 'px';
+    el.style.top = '-60px';
+    el.dataset.type = type;
+    el.dataset.speed = (Math.random() * 3 + 3) * speedMultiplier;
+    
+    gameArea.appendChild(el);
+    items.push({ el: el, y: -60, speed: parseFloat(el.dataset.speed), type: type });
+}
 
-        const goalEl = document.createElement('div');
-        goalEl.className = 'entity goal';
-        goalEl.style.left = levelData.goal.x + 'px';
-        goalEl.style.top = levelData.goal.y + 'px';
-        world.appendChild(goalEl);
-
-        loop();
+function startGame() {
+    startScreen.style.display = 'none';
+    isActive = true;
+    score = 0;
+    speedMultiplier = 1;
+    scoreEl.innerText = '0';
+    
+    player.style.backgroundImage = "url('basket.png')";
+    if (!player.style.backgroundImage.includes('url')) {
+        player.style.backgroundColor = '#ff3366';
+        player.style.borderRadius = '10px';
     }
 
-    document.addEventListener('keydown', (e) => {
-        if (e.code === 'ArrowRight') keys.right = true;
-        if (e.code === 'ArrowLeft') keys.left = true;
-        if (e.code === 'ArrowUp' || e.code === 'Space') {
-            if (player.grounded) {
-                player.vy = player.jumpPower;
-                player.grounded = false;
+    spawnLoop = setInterval(createItem, 800);
+    gameLoop = requestAnimationFrame(update);
+}
+
+function endGame() {
+    isActive = false;
+    clearInterval(spawnLoop);
+    cancelAnimationFrame(gameLoop);
+    gameOverScreen.style.display = 'flex';
+    finalScoreEl.innerText = 'Score: ' + score;
+}
+
+function update() {
+    if (!isActive) return;
+
+    for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
+        item.y += item.speed;
+        item.el.style.top = item.y + 'px';
+
+        const pRect = player.getBoundingClientRect();
+        const iRect = item.el.getBoundingClientRect();
+
+        if (
+            iRect.left < pRect.right &&
+            iRect.right > pRect.left &&
+            iRect.bottom > pRect.top &&
+            iRect.top < pRect.bottom
+        ) {
+            if (item.type === 'bad') {
+                endGame();
+                return;
+            } else {
+                score += 10;
+                scoreEl.innerText = score;
+                speedMultiplier += 0.02;
+                item.el.remove();
+                items.splice(i, 1);
             }
+        } else if (item.y > window.innerHeight) {
+            item.el.remove();
+            items.splice(i, 1);
         }
-    });
-
-    document.addEventListener('keyup', (e) => {
-        if (e.code === 'ArrowRight') keys.right = false;
-        if (e.code === 'ArrowLeft') keys.left = false;
-    });
-
-    function checkRectCollision(r1, r2) {
-        return (r1.x < r2.x + r2.w &&
-                r1.x + r1.w > r2.x &&
-                r1.y < r2.y + r2.h &&
-                r1.y + r1.h > r2.y);
     }
 
-    function loop() {
-        if (!gameActive) return;
-
-        if (keys.right) player.vx += 1;
-        if (keys.left) player.vx -= 1;
-
-        player.vx *= friction;
-        player.vy += gravity;
-
-        player.x += player.vx;
-        player.y += player.vy;
-
-        player.grounded = false;
-
-        levelData.platforms.forEach(p => {
-            const pRect = { x: p.x, y: p.y, w: p.w, h: p.h };
-            const playerRect = { x: player.x, y: player.y, w: player.width, h: player.height };
-
-            if (checkRectCollision(playerRect, pRect)) {
-                const overlapX = (player.x + player.width / 2) - (p.x + p.w / 2);
-                const overlapY = (player.y + player.height / 2) - (p.y + p.h / 2);
-                
-                const width = (player.width + p.w) / 2;
-                const height = (player.height + p.h) / 2;
-                
-                const crossWidth = width * height; 
-                const crossHeight = height * width; 
-
-                if (Math.abs(overlapY) * width > Math.abs(overlapX) * height) {
-                    if (overlapY > 0) {
-                        player.y = p.y + p.h;
-                        player.vy = 0;
-                    } else {
-                        player.y = p.y - player.height;
-                        player.vy = 0;
-                        player.grounded = true;
-                    }
-                } else {
-                    if (overlapX > 0) {
-                        player.x = p.x + p.w;
-                        player.vx = 0;
-                    } else {
-                        player.x = p.x - player.width;
-                        player.vx = 0;
-                    }
-                }
-            }
-        });
-
-        if (player.y > 800) {
-            player.x = 100;
-            player.y = 400;
-            player.vx = 0;
-            player.vy = 0;
-        }
-
-        levelData.hearts.forEach((h, index) => {
-            if (h.collected) return;
-            if (checkRectCollision(
-                {x: player.x, y: player.y, w: player.width, h: player.height},
-                {x: h.x, y: h.y, w: h.w, h: h.h}
-            )) {
-                h.collected = true;
-                document.getElementById('heart-' + index).style.display = 'none';
-                score++;
-                document.getElementById('score').innerText = score;
-            }
-        });
-
-        levelData.enemies.forEach((e, index) => {
-            e.x += e.speed * e.dir;
-            if (e.x > e.startX + e.range || e.x < e.startX - e.range) e.dir *= -1;
-            
-            const el = document.getElementById('enemy-' + index);
-            el.style.left = e.x + 'px';
-
-            if (checkRectCollision(
-                {x: player.x, y: player.y, w: player.width, h: player.height},
-                {x: e.x, y: e.y, w: e.w, h: e.h}
-            )) {
-                player.x = 100;
-                player.y = 400;
-                player.vx = 0;
-                player.vy = 0;
-            }
-        });
-
-        if (checkRectCollision(
-            {x: player.x, y: player.y, w: player.width, h: player.height},
-            {x: levelData.goal.x, y: levelData.goal.y, w: levelData.goal.w, h: levelData.goal.h}
-        )) {
-            gameActive = false;
-            document.getElementById('victory-screen').style.display = 'flex';
-        }
-
-        player.el.style.transform = `translate(${player.x}px, ${player.y}px)`;
-        if (player.vx > 0) player.el.style.transform += ' scaleX(1)';
-        if (player.vx < 0) player.el.style.transform += ' scaleX(-1)';
-
-        const cameraX = -player.x + (window.innerWidth / 2) - (player.width / 2);
-        world.style.transform = `translateX(${cameraX}px)`;
-
-        requestAnimationFrame(loop);
-    }
-
-    init();
+    gameLoop = requestAnimationFrame(update);
+}
 </script>
 </body>
 </html>
