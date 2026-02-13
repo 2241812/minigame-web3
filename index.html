@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quirky Valentine</title>
+<style>
+body { margin: 0; overflow: hidden; background: #ffb3ba; font-family: 'Courier New', Courier, monospace; user-select: none; }
+.bg-shapes { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+.shape { position: absolute; background: rgba(255, 255, 255, 0.4); border-radius: 50%; animation: float 10s infinite ease-in-out; }
+@keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-30px) scale(1.2); } }
+#ui { text-align: center; position: relative; z-index: 10; padding: 20px; }
+h1 { color: #d6336c; font-size: 2.5rem; text-shadow: 3px 3px 0px #fff; animation: wobble 2s infinite; margin-bottom: 10px; }
+@keyframes wobble { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+#meter-container { width: 300px; height: 30px; background: #fff; border: 4px solid #d6336c; border-radius: 15px; margin: 0 auto; overflow: hidden; position: relative; box-shadow: 0 4px 0 #d6336c; }
+#meter-fill { width: 0%; height: 100%; background: #ff5983; transition: width 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.target-img { position: absolute; width: 90px; height: 90px; object-fit: cover; border-radius: 50%; border: 4px solid #fff; cursor: pointer; transition: transform 0.1s; box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+.target-img:active { transform: scale(0.7); }
+#victory { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255, 179, 186, 0.95); z-index: 100; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+#victory h2 { font-size: 4rem; color: #d6336c; text-shadow: 4px 4px 0 #fff; animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin: 0; }
+.victory-img { width: 250px; height: 250px; border-radius: 30px; object-fit: cover; border: 8px solid #fff; margin-top: 30px; animation: spin 6s linear infinite; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+@keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="bg-shapes"></div>
+
+<div id="ui">
+    <h1>Catch My Heart!</h1>
+    <div id="meter-container">
+        <div id="meter-fill"></div>
+    </div>
+</div>
+
+<div id="victory">
+    <h2>You Caught Me! <br> Be My Valentine?</h2>
+    <img id="final-img" class="victory-img" src="" alt="Victory Image">
+</div>
+
+<script>
+let score = 0;
+const maxScore = 15;
+const images = ['image1.jpg', 'image2.jpg', 'image3.jpg'];
+const victoryImage = 'victory-image.jpg';
+
+function createShape() {
+    const shape = document.createElement('div');
+    shape.className = 'shape';
+    shape.style.width = Math.random() * 60 + 20 + 'px';
+    shape.style.height = shape.style.width;
+    shape.style.left = Math.random() * 100 + 'vw';
+    shape.style.top = Math.random() * 100 + 'vh';
+    shape.style.animationDuration = Math.random() * 5 + 5 + 's';
+    document.querySelector('.bg-shapes').appendChild(shape);
+}
+
+for (let i = 0; i < 25; i++) createShape();
+
+function spawnTarget() {
+    if (score >= maxScore) return;
+    
+    const img = document.createElement('img');
+    img.src = images[Math.floor(Math.random() * images.length)];
+    img.className = 'target-img';
+    img.draggable = false;
+    
+    const x = Math.random() * (window.innerWidth - 100);
+    const y = Math.random() * (window.innerHeight - 200) + 100;
+    
+    img.style.left = x + 'px';
+    img.style.top = y + 'px';
+    
+    let dx = (Math.random() - 0.5) * 6;
+    let dy = (Math.random() - 0.5) * 6;
+    
+    function move() {
+        if (!img.parentElement) return;
+        let currentX = parseFloat(img.style.left);
+        let currentY = parseFloat(img.style.top);
+        
+        if (currentX <= 0 || currentX >= window.innerWidth - 90) dx *= -1;
+        if (currentY <= 100 || currentY >= window.innerHeight - 90) dy *= -1;
+        
+        img.style.left = currentX + dx + 'px';
+        img.style.top = currentY + dy + 'px';
+        requestAnimationFrame(move);
+    }
+    
+    requestAnimationFrame(move);
+    
+    img.onmousedown = () => {
+        img.remove();
+        score++;
+        document.getElementById('meter-fill').style.width = (score / maxScore) * 100 + '%';
+        
+        if (score >= maxScore) {
+            document.querySelectorAll('.target-img').forEach(el => el.remove());
+            const vic = document.getElementById('victory');
+            vic.style.display = 'flex';
+            document.getElementById('final-img').src = victoryImage;
+        }
+    };
+    
+    document.body.appendChild(img);
+    
+    setTimeout(() => {
+        if (img.parentElement) img.remove();
+    }, 3500);
+}
+
+setInterval(spawnTarget, 700);
+</script>
+</body>
+</html>
