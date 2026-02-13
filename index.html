@@ -305,10 +305,10 @@
 <div id="final-card">
     <h1>It's a Date! 🌹</h1>
     <p>
-        Sorry if I'am a little late po with the grand reveal, but you are always my first thought! 😉 its just that I've been busy nyehehe<br><br>
-        I appreciate you so much, and I've been so excited to finally show you this. I couldn't imagine celebrating with anyone else.<br><br>
-        <b>Let's go out this Sunday! at URDA</b><br>
-        Get ready for a beautiful day together. ❤️
+        I knew you'd say yes! 😉<br><br>
+        I appreciate you so much, and I can't wait to celebrate with you.<br><br>
+        <b>Let's go out this Sunday!</b><br>
+        Get ready for a special day. ❤️
     </p>
 </div>
 
@@ -479,10 +479,10 @@ function onPointerDown(event) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(pieces);
     
-    if (intersects.length > 0) {
-        const firstHit = intersects[0].object;
-        if (!firstHit.userData.isLocked) {
-            selectedPiece = firstHit;
+    for (let i = 0; i < intersects.length; i++) {
+        const hit = intersects[i].object;
+        if (!hit.userData.isLocked) {
+            selectedPiece = hit;
             selectedPiece.userData.isDragging = true;
             
             playPickupSound();
@@ -492,6 +492,7 @@ function onPointerDown(event) {
             offset.copy(selectedPiece.position).sub(planeIntersect);
             
             gsap.to(selectedPiece.position, { z: 0.5, duration: 0.1 });
+            break;
         }
     }
 }
@@ -517,7 +518,7 @@ function onPointerUp() {
 
         if (dist < SNAP_DISTANCE) {
             playSnapSound();
-            gsap.to(selectedPiece.position, { x: target.x, y: target.y, z: 0, duration: 0.3, ease: "back.out(1.7)" });
+            gsap.to(selectedPiece.position, { x: target.x, y: target.y, z: -0.05, duration: 0.3, ease: "back.out(1.7)" });
             selectedPiece.material.emissive = new THREE.Color(0xaa2244);
             gsap.to(selectedPiece.material.emissive, {r:0, g:0, b:0, duration: 0.5});
             selectedPiece.userData.isLocked = true;
