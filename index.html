@@ -202,8 +202,7 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%) scale(0);
-        background: white;
-        padding: 40px;
+        background: rgba(255, 255, 255, 0.85);
         border-radius: 20px;
         box-shadow: 0 0 60px rgba(255, 0, 120, 0.6);
         text-align: center;
@@ -212,23 +211,64 @@
         max-width: 400px;
         opacity: 0;
         pointer-events: none;
+        overflow: hidden;
     }
-    
+
     #final-card.visible {
         pointer-events: auto;
+    }
+
+    .gallery-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0.35;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .gallery-track {
+        display: flex;
+        height: 100%;
+        width: max-content;
+        animation: scrollGallery 15s linear infinite;
+    }
+
+    .gallery-track img {
+        width: 200px;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    @keyframes scrollGallery {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    .final-card-content {
+        position: relative;
+        z-index: 1;
+        padding: 40px;
     }
 
     #final-card h1 { 
         color: #ff2e7a; 
         margin: 0 0 15px 0; 
         font-size: 24px;
+        text-shadow: 0 2px 4px rgba(255,255,255,0.9);
     }
 
     #final-card p { 
-        color: #555; 
-        font-size: 16px; 
+        color: #333; 
+        font-size: 15px; 
         line-height: 1.6; 
         margin: 0;
+        font-weight: bold;
+        text-shadow: 0 2px 4px rgba(255,255,255,0.9);
     }
 
     #overlayHearts {
@@ -303,13 +343,27 @@
 </div>
 
 <div id="final-card">
-    <h1>It's a Date! 🌹</h1>
-    <p>
-        I might be a little late with the grand reveal, but you are always my first thought! 😉<br><br>
-        I appreciate you so much, and I've been so excited to finally show you this. I couldn't imagine celebrating with anyone else.<br><br>
-        <b>We go out on SUNDAY!</b><br>
-        Get ready for a beautiful day together. ❤️
-    </p>
+    <div class="gallery-bg">
+        <div class="gallery-track">
+            <img src="images/1.jpg" alt="">
+            <img src="images/2.jpg" alt="">
+            <img src="images/3.jpg" alt="">
+            
+            <img src="images/1.jpg" alt="">
+            <img src="images/2.jpg" alt="">
+            <img src="images/3.jpg" alt="">
+        </div>
+    </div>
+    
+    <div class="final-card-content">
+        <h1>It's a Date! 🌹</h1>
+        <p>
+            I might be a little late with the grand reveal, but you are always my first thought! 😉<br><br>
+            I appreciate you so much, and I've been so excited to finally show you this. I couldn't imagine celebrating with anyone else.<br><br>
+            <b>We go out on SUNDAY!</b><br>
+            Get ready for a beautiful day together. ❤️
+        </p>
+    </div>
 </div>
 
 <div id="instructions">Drag the pieces to complete the picture</div>
