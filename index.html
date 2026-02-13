@@ -2,224 +2,661 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Valentine Adventure ❤️</title>
+<title>❤️ Be My Valentine? ❤️</title>
 <style>
     body {
         margin: 0;
         overflow: hidden;
-        font-family: 'Arial', sans-serif;
-        background: #111;
+        background: radial-gradient(circle at center, #ff9a9e, #fad0c4);
+        font-family: 'Courier New', cursive;
+        user-select: none;
     }
 
     canvas {
-        display: block;
-        background: url('images/bg.jpg') no-repeat center center;
-        background-size: cover;
+        transition: filter 0.5s ease;
     }
 
-    #puzzleModal {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.8);
-        display: none;
-        align-items: center;
+    #start-screen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, #ff9a9e, #fad0c4);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
         justify-content: center;
+        align-items: center;
+        transition: opacity 0.5s ease;
+    }
+
+    #loading-text {
+        color: #d6336c;
+        font-size: 24px;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    }
+
+    #start-btn {
+        display: none;
+        padding: 15px 40px;
+        font-size: 20px;
+        background: #e91e63;
         color: white;
-        text-align: center;
-    }
-
-    .puzzleBox {
-        background: #ff4f81;
-        padding: 30px;
-        border-radius: 15px;
-        width: 300px;
-    }
-
-    input {
-        padding: 10px;
-        border-radius: 8px;
         border: none;
-        width: 80%;
-        margin-top: 10px;
+        border-radius: 30px;
+        cursor: pointer;
+        box-shadow: 0 5px 15px rgba(233, 30, 99, 0.4);
+        font-family: inherit;
+        font-weight: bold;
+        transition: transform 0.2s;
+    }
+
+    #start-btn:hover {
+        transform: scale(1.05);
+    }
+
+    #envelope-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 300px;
+        height: 200px;
+        z-index: 100;
+        cursor: pointer;
+        opacity: 0;
+        perspective: 1200px;
+    }
+
+    .envelope-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #d81b60;
+        border-radius: 10px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        z-index: 1;
+    }
+
+    .letter {
+        position: absolute;
+        top: 10px;
+        left: 15px;
+        width: 270px;
+        height: 180px;
+        background: white;
+        border-radius: 5px;
+        padding: 15px;
+        box-sizing: border-box;
+        text-align: center;
+        z-index: 2;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        pointer-events: auto;
+    }
+
+    .letter h2 {
+        font-size: 16px;
+        color: #d6336c;
+        margin: 0 0 10px 0;
+        line-height: 1.2;
+    }
+
+    .letter p {
+        font-size: 14px;
+        color: #333;
+        margin: 0 0 15px 0;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin: 0;
     }
 
     button {
-        margin-top: 15px;
-        padding: 10px 15px;
+        padding: 8px 16px;
         border: none;
-        border-radius: 8px;
-        background: white;
+        border-radius: 20px;
         cursor: pointer;
+        font-family: inherit;
         font-weight: bold;
+        transition: transform 0.1s;
     }
 
-    #messageScreen {
-        position: fixed;
-        inset: 0;
-        background: linear-gradient(to bottom right, #ff4f81, #ff9a9e);
-        display: none;
+    .btn-yes {
+        background: #4CAF50;
         color: white;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        font-size: 2rem;
+    }
+    
+    .btn-no {
+        background: #f44336;
+        color: white;
+        position: relative;
+        transition: transform 0.2s ease;
+    }
+
+    .pocket-base {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #e91e63;
+        clip-path: polygon(0 0, 50% 50%, 100% 0, 100% 100%, 0 100%);
+        z-index: 3;
+        border-radius: 0 0 10px 10px;
+        pointer-events: none;
+    }
+
+    .flap-left {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.03);
+        clip-path: polygon(0 0, 50% 50%, 0 100%);
+        z-index: 4;
+        border-radius: 10px 0 0 10px;
+        pointer-events: none;
+    }
+
+    .flap-right {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.03);
+        clip-path: polygon(100% 0, 100% 100%, 50% 50%);
+        z-index: 4;
+        border-radius: 0 10px 10px 0;
+        pointer-events: none;
+    }
+
+    .flap-bottom {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.08);
+        clip-path: polygon(0 100%, 50% 50%, 100% 100%);
+        z-index: 4;
+        border-radius: 0 0 10px 10px;
+        pointer-events: none;
+    }
+
+    .flap-top {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #ff5c8d;
+        clip-path: polygon(0 0, 100% 0, 50% 50%);
+        transform-origin: top;
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    #final-card {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 0 60px rgba(255, 0, 120, 0.6);
+        text-align: center;
+        z-index: 200;
+        width: 80%;
+        max-width: 400px;
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    #final-card.visible {
+        pointer-events: auto;
+    }
+
+    #final-card h1 { 
+        color: #ff2e7a; 
+        margin: 0 0 15px 0; 
+        font-size: 24px;
+    }
+
+    #final-card p { 
+        color: #555; 
+        font-size: 16px; 
+        line-height: 1.6; 
+        margin: 0;
+    }
+
+    #overlayHearts {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 50;
+    }
+
+    .heart {
+        position: absolute;
+        color: #e91e63;
+        font-size: 24px;
+        animation: floatUp linear forwards;
+    }
+
+    @keyframes floatUp {
+        from { transform: translateY(0) scale(1); opacity: 1; }
+        to { transform: translateY(-100vh) scale(1.5); opacity: 0; }
+    }
+    
+    #instructions {
+        position: absolute;
+        bottom: 20px;
+        width: 100%;
+        text-align: center;
+        color: #d6336c;
+        font-weight: bold;
+        pointer-events: none;
+        text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    }
+    
+    #tap-hint {
+        position: absolute;
+        bottom: -30px;
+        width: 100%;
+        text-align: center;
+        color: white;
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity 1s;
     }
 </style>
 </head>
 <body>
 
-<canvas id="gameCanvas"></canvas>
+<audio id="bgm" src="music/bgm.mp3" loop preload="auto"></audio>
 
-<div id="puzzleModal">
-    <div class="puzzleBox">
-        <h2>💌 Love Puzzle</h2>
-        <p>What is our anniversary date?</p>
-        <input id="answerInput" placeholder="MM/DD/YYYY">
-        <br>
-        <button onclick="checkAnswer()">Unlock ❤️</button>
-        <p id="errorMsg" style="color:yellow;"></p>
+<div id="start-screen">
+    <div id="loading-text">Loading Cuteness...</div>
+    <button id="start-btn" onclick="startGame()">Start ❤️</button>
+</div>
+
+<div id="envelope-container" onclick="openEnvelope()">
+    <div class="envelope-back"></div>
+    <div class="letter">
+        <h2>You completed the puzzle! <br>Now...</h2>
+        <p>Will you be my Valentine?</p>
+        <div class="btn-group">
+            <button class="btn-yes" onclick="acceptProposal(event)">YES ❤️</button>
+            <button class="btn-no" onmouseover="dodgeButton(this)" onclick="dodgeButton(this)">NO</button>
+        </div>
     </div>
+    <div class="pocket-base"></div>
+    <div class="flap-left"></div>
+    <div class="flap-right"></div>
+    <div class="flap-bottom"></div>
+    <div class="flap-top"></div>
+    <div id="tap-hint">(Tap to open)</div>
 </div>
 
-<div id="messageScreen">
-    <h1>You Reached the End 💖</h1>
-    <p>I Love You So Much ❤️</p>
+<div id="final-card">
+    <h1>It's a Date! 🌹</h1>
+    <p>
+        Sorry if I'am a little late po with the grand reveal, but you are always my first thought! 😉 its just that I've been busy nyehehe<br><br>
+        I appreciate you so much, and I've been so excited to finally show you this. I couldn't imagine celebrating with anyone else.<br><br>
+        <b>Let's go out this Sunday! at URDA</b><br>
+        Get ready for a beautiful day together. ❤️
+    </p>
 </div>
+
+<div id="instructions">Drag the pieces to complete the picture</div>
+<div id="overlayHearts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://unpkg.com/gifler@0.1.0/gifler.min.js"></script>
 
 <script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const IMAGE_SRC = 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDgwODg0NnlnOHgwdjlsZHo2ZXRzZjF2cGdkOTBuc2pwYWtwOXN3aCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/fEKPyuq2MVXKbCqGTw/giphy.gif'; 
+const ROWS = 3; 
+const COLS = 3;
+const PIECE_SIZE = 1.2; 
+const SNAP_DISTANCE = 0.5;
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+const scene = new THREE.Scene();
 
-let gravity = 0.8;
-let keysCollected = 0;
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0, 8); 
+camera.lookAt(0, 0, 0);
 
-const playerImg = new Image();
-playerImg.src = "images/player.png"; // replace
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
 
-const envelopeImg = new Image();
-envelopeImg.src = "images/envelope.png"; // replace
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+scene.add(ambientLight);
 
-const gateImg = new Image();
-gateImg.src = "images/gate.png"; // replace
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+dirLight.position.set(5, 10, 7);
+dirLight.castShadow = true;
+scene.add(dirLight);
 
-let player = {
-    x: 100,
-    y: 300,
-    width: 50,
-    height: 50,
-    dx: 0,
-    dy: 0,
-    jumping: false
-};
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 
-let keys = {};
-let envelopes = [
-    {x: 600, y: 300, solved: false},
-    {x: 1200, y: 300, solved: false}
-];
+let pieces = [];
+let gridLines = [];
+let selectedPiece = null;
+let offset = new THREE.Vector3();
+let placedCount = 0;
+const totalPieces = ROWS * COLS;
+let isEnvelopeOpen = false;
 
-let gate = {
-    x: 1600,
-    y: 280,
-    width: 80,
-    height: 120
-};
+let isPuzzleReady = false;
+let userHasStarted = false;
 
-let finishLine = 2000;
-
-document.addEventListener("keydown", e => keys[e.code] = true);
-document.addEventListener("keyup", e => keys[e.code] = false);
-
-function update() {
-
-    if (keys["ArrowRight"]) player.dx = 5;
-    else if (keys["ArrowLeft"]) player.dx = -5;
-    else player.dx = 0;
-
-    if (keys["Space"] && !player.jumping) {
-        player.dy = -15;
-        player.jumping = true;
-    }
-
-    player.dy += gravity;
-    player.x += player.dx;
-    player.y += player.dy;
-
-    if (player.y > 300) {
-        player.y = 300;
-        player.jumping = false;
-    }
-
-    envelopes.forEach(env => {
-        if (!env.solved &&
-            player.x < env.x + 50 &&
-            player.x + player.width > env.x &&
-            player.y < env.y + 50 &&
-            player.y + player.height > env.y) {
-
-            openPuzzle(env);
-        }
-    });
-
-    if (keysCollected < envelopes.length) {
-        if (player.x + player.width > gate.x) {
-            player.x = gate.x - player.width;
-        }
-    }
-
-    if (player.x > finishLine) {
-        document.getElementById("messageScreen").style.display = "flex";
+function checkReadyState() {
+    if (isPuzzleReady) {
+        document.getElementById('loading-text').style.display = 'none';
+        document.getElementById('start-btn').style.display = 'block';
     }
 }
 
-function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-
-    envelopes.forEach(env => {
-        if (!env.solved)
-            ctx.drawImage(envelopeImg, env.x, env.y, 50, 50);
-    });
-
-    ctx.drawImage(gateImg, gate.x, gate.y, gate.width, gate.height);
-
-    ctx.fillStyle = "white";
-    ctx.fillText("Keys: " + keysCollected, 20, 30);
-}
-
-function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
-
-let currentEnvelope = null;
-
-function openPuzzle(env) {
-    currentEnvelope = env;
-    document.getElementById("puzzleModal").style.display = "flex";
-}
-
-function checkAnswer() {
-    let input = document.getElementById("answerInput").value;
+function startGame() {
+    userHasStarted = true;
     
-    if (input === "02/14/2023") { // change to your real date
-        currentEnvelope.solved = true;
-        keysCollected++;
-        document.getElementById("puzzleModal").style.display = "none";
-        document.getElementById("errorMsg").innerText = "";
-        document.getElementById("answerInput").value = "";
-    } else {
-        document.getElementById("errorMsg").innerText = "Wrong answer 💔 Try again!";
+    const bgm = document.getElementById('bgm');
+    if (bgm) {
+        bgm.play().catch(e => console.log(e));
+    }
+    
+    const startScreen = document.getElementById('start-screen');
+    startScreen.style.opacity = '0';
+    setTimeout(() => {
+        startScreen.style.display = 'none';
+    }, 500);
+}
+
+function createSquareShape(width, height) {
+    const shape = new THREE.Shape();
+    const x = -width / 2;
+    const y = height / 2;
+    shape.moveTo(x, y);
+    shape.lineTo(x + width, y);
+    shape.lineTo(x + width, y - height);
+    shape.lineTo(x, y - height);
+    shape.lineTo(x, y);
+    return shape;
+}
+
+const gifCanvas = document.createElement('canvas');
+
+gifler(IMAGE_SRC).get(function(a) {
+    gifCanvas.width = a.width;
+    gifCanvas.height = a.height;
+    a.animateInCanvas(gifCanvas);
+    const masterTexture = new THREE.CanvasTexture(gifCanvas);
+    masterTexture.colorSpace = THREE.SRGBColorSpace;
+    buildPuzzle(masterTexture);
+    isPuzzleReady = true;
+    checkReadyState();
+});
+
+function buildPuzzle(texture) {
+    const totalWidth = COLS * PIECE_SIZE;
+    const totalHeight = ROWS * PIECE_SIZE;
+    const startX = -totalWidth / 2 + PIECE_SIZE / 2;
+    const startY = totalHeight / 2 - PIECE_SIZE / 2;
+
+    const gridGeo = new THREE.PlaneGeometry(PIECE_SIZE, PIECE_SIZE);
+    const edges = new THREE.EdgesGeometry(gridGeo);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.06 });
+
+    for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+            const targetX = startX + col * PIECE_SIZE;
+            const targetY = startY - row * PIECE_SIZE;
+
+            const gridSquare = new THREE.LineSegments(edges, lineMat);
+            gridSquare.position.set(targetX, targetY, -0.1);
+            scene.add(gridSquare);
+            gridLines.push(gridSquare);
+
+            const shape = createSquareShape(PIECE_SIZE, PIECE_SIZE);
+            const geometry = new THREE.ExtrudeGeometry(shape, {
+                depth: 0.1, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 3
+            });
+
+            const posAttribute = geometry.attributes.position;
+            const uvAttribute = geometry.attributes.uv;
+            for (let i = 0; i < posAttribute.count; i++) {
+                const x = posAttribute.getX(i);
+                const y = posAttribute.getY(i);
+                let u = (x / PIECE_SIZE) + 0.5;
+                let v = (y / PIECE_SIZE) + 0.5;
+                u = (u + col) / COLS;
+                v = (v + (ROWS - 1 - row)) / ROWS;
+                uvAttribute.setXY(i, u, v);
+            }
+
+            const material = new THREE.MeshStandardMaterial({
+                map: texture, roughness: 0.4, metalness: 0.1
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.userData.targetPos = new THREE.Vector3(targetX, targetY, 0);
+            
+            const randomX = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 2 + 2);
+            const randomY = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 1.5 + 1.5);
+            
+            mesh.position.x = randomX; 
+            mesh.position.y = randomY;
+            mesh.position.z = 0;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData.isLocked = false;
+            
+            scene.add(mesh);
+            pieces.push(mesh);
+        }
     }
 }
-</script>
 
+window.addEventListener('pointerdown', onPointerDown);
+window.addEventListener('pointermove', onPointerMove);
+window.addEventListener('pointerup', onPointerUp);
+
+function onPointerDown(event) {
+    if (pieces.length === 0) return;
+    
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(pieces);
+    
+    if (intersects.length > 0) {
+        const firstHit = intersects[0].object;
+        if (!firstHit.userData.isLocked) {
+            selectedPiece = firstHit;
+            selectedPiece.userData.isDragging = true;
+            
+            playPickupSound();
+            
+            const planeIntersect = new THREE.Vector3();
+            raycaster.ray.intersectPlane(dragPlane, planeIntersect);
+            offset.copy(selectedPiece.position).sub(planeIntersect);
+            
+            gsap.to(selectedPiece.position, { z: 0.5, duration: 0.1 });
+        }
+    }
+}
+
+function onPointerMove(event) {
+    if (!selectedPiece) return;
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    
+    const planeIntersect = new THREE.Vector3();
+    if (raycaster.ray.intersectPlane(dragPlane, planeIntersect)) {
+        selectedPiece.position.copy(planeIntersect.add(offset));
+        selectedPiece.position.z = 0.5; 
+    }
+}
+
+function onPointerUp() {
+    if (selectedPiece) {
+        const target = selectedPiece.userData.targetPos;
+        const current = selectedPiece.position;
+        const dist = Math.sqrt(Math.pow(target.x - current.x, 2) + Math.pow(target.y - current.y, 2));
+
+        if (dist < SNAP_DISTANCE) {
+            playSnapSound();
+            gsap.to(selectedPiece.position, { x: target.x, y: target.y, z: 0, duration: 0.3, ease: "back.out(1.7)" });
+            selectedPiece.material.emissive = new THREE.Color(0xaa2244);
+            gsap.to(selectedPiece.material.emissive, {r:0, g:0, b:0, duration: 0.5});
+            selectedPiece.userData.isLocked = true;
+            placedCount++;
+            
+            if (placedCount === totalPieces) {
+                setTimeout(triggerSuccessSequence, 1000);
+            }
+        } else {
+            gsap.to(selectedPiece.position, { z: 0, duration: 0.2 });
+        }
+        
+        selectedPiece.userData.isDragging = false;
+        selectedPiece = null;
+    }
+}
+
+function triggerSuccessSequence() {
+    document.getElementById("instructions").style.display = "none";
+    pieces = []; 
+    
+    gsap.to(scene.fog, { density: 0.1 });
+    
+    gridLines.forEach(line => {
+        gsap.to(line.material, { opacity: 0, duration: 1 });
+    });
+    
+    const env = document.getElementById("envelope-container");
+    gsap.to(env, { 
+        scale: 1, 
+        opacity: 1, 
+        duration: 1.5, 
+        ease: "elastic.out(1, 0.5)",
+        onComplete: () => {
+             document.getElementById("tap-hint").style.opacity = 1;
+        }
+    });
+}
+
+function openEnvelope() {
+    if(isEnvelopeOpen) return;
+    isEnvelopeOpen = true;
+    
+    document.getElementById("tap-hint").style.opacity = 0;
+    
+    const tl = gsap.timeline();
+    tl.to(".flap-top", { rotationX: 180, duration: 0.5, ease: "power2.inOut" })
+      .set(".flap-top", { zIndex: 1 })
+      .to(".letter", { y: -160, duration: 0.5, ease: "power2.out" })
+      .set(".letter", { zIndex: 20 })
+      .to(".letter", { y: -20, scale: 1.3, duration: 0.8, ease: "back.out(1.2)" }, "+=0.1")
+      .to("canvas", { filter: "blur(8px)", duration: 0.5 }, "-=0.8")
+      .to(".envelope-back, .pocket-base, .flap-left, .flap-right, .flap-bottom, .flap-top", { opacity: 0, duration: 0.5 }, "-=0.8")
+      .set("#envelope-container", { pointerEvents: "none" });
+}
+
+function dodgeButton(btn) {
+    if (window.event) window.event.stopPropagation();
+    const x = (Math.random() - 0.5) * 120;
+    const y = (Math.random() - 0.5) * 80;
+    btn.style.transform = `translate(${x}px, ${y}px)`;
+}
+
+function acceptProposal(event) {
+    event.stopPropagation();
+    
+    gsap.to(".letter", { scale: 0, opacity: 0, duration: 0.5 });
+    
+    const card = document.getElementById("final-card");
+    card.classList.add("visible");
+    gsap.to(card, { 
+        scale: 1, 
+        opacity: 1, 
+        duration: 1, 
+        delay: 0.3,
+        ease: "back.out(1.5)" 
+    });
+    
+    setInterval(createHeart, 200);
+    playSnapSound(); 
+}
+
+function playPickupSound() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.05);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.1);
+}
+
+function playSnapSound() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.05);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.1);
+}
+
+function createHeart() {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    heart.innerHTML = "❤️";
+    heart.style.left = Math.random() * 100 + "%";
+    heart.style.bottom = "-50px";
+    heart.style.animationDuration = (3 + Math.random() * 2) + "s";
+    document.getElementById("overlayHearts").appendChild(heart);
+    setTimeout(() => { heart.remove(); }, 6000);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    if (pieces.length > 0) {
+        pieces.forEach(p => {
+            if (p.material.map) p.material.map.needsUpdate = true;
+        });
+    }
+    renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
 </body>
 </html>
